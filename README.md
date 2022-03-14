@@ -1,0 +1,1 @@
+# plotmanager_qgis_plugin

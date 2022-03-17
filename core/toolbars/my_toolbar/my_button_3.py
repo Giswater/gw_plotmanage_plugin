@@ -19,7 +19,7 @@ from ....settings import giswater_folder, tools_qgis, tools_log, tools_qt, tools
 dialog = importlib.import_module('.dialog', package=f'{giswater_folder}.core.toolbars')
 
 
-class Graph(dialog.GwAction):
+class Bokeh(dialog.GwAction):
 
     def __init__(self, icon_path, action_name, text, toolbar, action_group):
         super().__init__(icon_path, action_name, text, toolbar, action_group)
@@ -39,7 +39,6 @@ class Graph(dialog.GwAction):
         xaxis = 'time'
         control = 'node_id'
 
-        #query = f"select * from project_fraph.rpt_node where node_id='{node}' and result_id='{result}';"
         query = f"select * from project_fraph.rpt_node where result_id='{result}';"
 
         # execute the query
@@ -53,15 +52,23 @@ class Graph(dialog.GwAction):
         timefi = sorted(time)
         print(sorted(time))
         print(timefi)
-        # graph code
-        sns.set()
-        plt.plot(sorted(time),head)
-        plt.legend('ABCDEF', ncol=2, loc='upper left');
-        plt.show()
+        # importing the modules
+        from bokeh.plotting import figure, output_file, show
 
-        sns.set()
-        plt.bar(node_id,elevation)
-        plt.show()
+        # instantiating the figure object
+        graph = figure(title="Bokeh Bar Graph")
+
+
+        # height / thickness of the plot
+        width = 0.1
+
+        # plotting the bar graph
+        graph.vbar(node_id, top=elevation, width=width)
+
+        # displaying the model
+        show(graph)
+
+
 
 
 

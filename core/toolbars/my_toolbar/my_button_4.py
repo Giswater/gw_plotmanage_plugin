@@ -19,16 +19,13 @@ from ....settings import giswater_folder, tools_qgis, tools_log, tools_qt, tools
 dialog = importlib.import_module('.dialog', package=f'{giswater_folder}.core.toolbars')
 
 
-class Graph(dialog.GwAction):
+class Plotnine(dialog.GwAction):
 
     def __init__(self, icon_path, action_name, text, toolbar, action_group):
         super().__init__(icon_path, action_name, text, toolbar, action_group)
 
 
     def clicked_event(self):
-        import matplotlib.pyplot as plt
-        import numpy as np
-        import seaborn as sns
         import psycopg2
         conn = psycopg2.connect(database="giswater", user="postgres", host="localhost", password="guillem12", port=5432)
         cur = conn.cursor()
@@ -39,7 +36,7 @@ class Graph(dialog.GwAction):
         xaxis = 'time'
         control = 'node_id'
 
-        #query = f"select * from project_fraph.rpt_node where node_id='{node}' and result_id='{result}';"
+        # query = f"select * from project_fraph.rpt_node where node_id='{node}' and result_id='{result}';"
         query = f"select * from project_fraph.rpt_node where result_id='{result}';"
 
         # execute the query
@@ -51,17 +48,11 @@ class Graph(dialog.GwAction):
         conn.close()
         id, result_id, node_id, elevation, demand, head, press, other, time, quality = zip(*data)
         timefi = sorted(time)
-        print(sorted(time))
-        print(timefi)
-        # graph code
-        sns.set()
-        plt.plot(sorted(time),head)
-        plt.legend('ABCDEF', ncol=2, loc='upper left');
-        plt.show()
 
-        sns.set()
-        plt.bar(node_id,elevation)
-        plt.show()
+        import missingno as msno
+        msno.bar(data)
+
+
 
 
 

@@ -19,7 +19,7 @@ from ....settings import giswater_folder, tools_qgis, tools_log, tools_qt, tools
 dialog = importlib.import_module('.dialog', package=f'{giswater_folder}.core.toolbars')
 
 
-class Graph(dialog.GwAction):
+class Graph2(dialog.GwAction):
 
     def __init__(self, icon_path, action_name, text, toolbar, action_group):
         super().__init__(icon_path, action_name, text, toolbar, action_group)
@@ -53,15 +53,13 @@ class Graph(dialog.GwAction):
         timefi = sorted(time)
         print(sorted(time))
         print(timefi)
-        # graph code
-        sns.set()
-        plt.plot(sorted(time),head)
-        plt.legend('ABCDEF', ncol=2, loc='upper left');
-        plt.show()
 
-        sns.set()
-        plt.bar(node_id,elevation)
-        plt.show()
+        import plotly.express as px
+
+        fi = px.line(data, x=timefi, y=head)
+        fi.show()
+        fig = px.bar(data, x=node_id, y=elevation)
+        fig.show()
 
 
 

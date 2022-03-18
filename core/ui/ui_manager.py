@@ -33,7 +33,7 @@ def get_ui_class(ui_file_name, subfolder=None):
 
 
 # Dialogs of toolbar: my_toolbar
-FORM_CLASS = get_ui_class('dlg_button_1.ui', 'my_toolbar')
+FORM_CLASS = get_ui_class('dlg_static.ui', 'my_toolbar')
 class DlgButton1(GwDialog, FORM_CLASS):
     pass
 

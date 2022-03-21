@@ -28,61 +28,20 @@ class Graph(dialog.GwAction):
         super().__init__(icon_path, action_name, text, toolbar, action_group)
         self.project_type = global_vars.project_type
 
-
     def clicked_event(self):
         self.open_dialog()
-
-
-    def get_graph(self):
-        import matplotlib.pyplot as plt
-        import numpy as np
-        import seaborn as sns
-        import psycopg2
-        conn = psycopg2.connect(database="giswater", user="postgres", host="localhost", password="guillem12", port=5432)
-        cur = conn.cursor()
-
-        table = tools_qt.get_text(self.dlg_seaborn, self.dlg_seaborn.txt_nameTable)
-        base_value = tools_qt.get_combo_value(self.dlg_seaborn,self.dlg_seaborn.cmb_values)
-        target_value = tools_qt.get_combo_value(self.dlg_seaborn,self.dlg_seaborn.cmb_values)
-        result = 'r1'
-        yaxis = 'head'
-        xaxis = 'time'
-        control = 'node_id'
-
-        # query = f"select * from project_fraph.rpt_node where node_id='{node}' and result_id='{result}';"
-        query = f"select * from project_fraph.rpt_node where result_id='{result}';"
-
-        # execute the query
-        cur.execute(query)
-        # retrieve the whole result set
-        data = cur.fetchall()
-        # close cursor and connection
-        cur.close()
-        conn.close()
-        id, result_id, node_id, elevation, demand, head, press, other, time, quality = zip(*data)
-        timefi = sorted(time)
-        print(sorted(time))
-        print(timefi)
-        # graph code
-        sns.set()
-        plt.plot(sorted(time), head)
-        plt.legend('ABCDEF', ncol=2, loc='upper left');
-        plt.show()
-
-        sns.set()
-        plt.bar(node_id, elevation)
-        plt.show()
-
 
     def open_dialog(self):
 
         self.dlg_seaborn = DlgButton1()
 
 
+
         # Populate main
         base_column = [['node_id', 'node_id'], ['result_id', 'result_id']]
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_values, rows=base_column)
-        sql = f"SELECT column_name FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'rpt_node';"
+        tools_qt.fill_combo_values(self.dlg_seaborn.cmb_targetColumn, rows=base_column)
+        sql = f"SELECT DISTINCT(column_name) FROM INFORMATION_SCHEMA.COLUMNS WHERE TABLE_NAME = 'rpt_node';"
         rows = tools_db.get_rows(sql)
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_xaxis, rows=rows)
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_yaxis, rows=rows)
@@ -93,12 +52,11 @@ class Graph(dialog.GwAction):
         # Listeners
         self.dlg_seaborn.cmb_values.currentIndexChanged.connect(self.populate_child_cmb)
         self.dlg_seaborn.btn_insert.clicked.connect(self.populate_selected_lw)
-        self.dlg_seaborn.btn_create.clicked.connect(self.get_graph())
+        self.dlg_seaborn.btn_create.clicked.connect(self.get_graph)
 
 
         # Open dialog
         tools_gw.open_dialog(self.dlg_seaborn, dlg_name='seaborn')
-
 
     def populate_child_cmb(self):
 
@@ -108,6 +66,7 @@ class Graph(dialog.GwAction):
         rows_id = tools_db.get_rows(sql)
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_basevalue, rows_id)
         self.dlg_seaborn.lw_defaultvalues.clear()
+        self.dlg_seaborn.lw_selectedvalues.clear()
         if(index_selected == "node_id"):
             sql = f"SELECT DISTINCT(result_id) FROM rpt_node order by result_id;"
             rows = tools_db.get_rows(sql)
@@ -129,7 +88,53 @@ class Graph(dialog.GwAction):
         for x in self.dlg_seaborn.lw_defaultvalues.selectedIndexes():
             self.dlg_seaborn.lw_defaultvalues.takeItem(x.row())
 
+    def get_graph(self):
 
+        import matplotlib.pyplot as plt
+        import numpy as np
+        import seaborn as sns
+        import psycopg2
+
+        table = tools_qt.get_text(self.dlg_seaborn, self.dlg_seaborn.txt_nameTable)
+        base_column = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_values)
+        base_value = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_basevalue)
+        target_column = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_targetColumn)
+        yaxis = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_yaxis)
+        xaxis = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_xaxis)
+
+        # query = f"select * from project_fraph.rpt_node where node_id='{node}' and result_id='{result}';"
+
+        # timefi = sorted(time)
+        # print(sorted(time))
+        # print(timefi)
+        if tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_lines):
+            legend = []
+            # graph code
+            sns.set()
+            for x in range(self.dlg_seaborn.lw_selectedvalues.count()):
+
+                target_value = self.dlg_seaborn.lw_selectedvalues.item(x).text()
+                legend.append(target_value)
+                query = f"SELECT {xaxis},{yaxis} FROM {table} WHERE {base_column}='{base_value}' AND {target_column}='{target_value}';"
+                print(query)
+                db_data = tools_db.get_rows(query)
+                # close cursor and connection
+                valuex, valuey = zip(*db_data)
+                plt.plot(valuex, valuey)
+
+            plt.legend(legend, ncol=2, loc='upper left');
+            plt.show()
+        elif tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_bars):
+            sns.set()
+            for x in range(self.dlg_seaborn.lw_selectedvalues.count()-1):
+                target_value = self.dlg_seaborn.lw_selectedvalues.item(x).text()
+                query = f"SELECT {xaxis},{yaxis} FROM {table} WHERE {base_column}='{base_value}' AND {target_column}='{target_value}';"
+                print(query)
+                db_data = tools_db.get_rows(query)
+                # close cursor and connection
+                valuex, valuey = zip(*db_data)
+                plt.bar(valuex, valuey)
+            plt.show()
 
 
 

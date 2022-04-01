@@ -62,6 +62,7 @@ class GWPluginExample(QObject):
 
         # Initialize plugin global variables
         self.plugin_dir = os.path.dirname(__file__)
+        print(self.plugin_dir)
         self.icon_folder = os.path.join(self.plugin_dir, 'icons', 'toolbars')
         self.plugin_name = self.get_plugin_metadata('name', 'giswater_plugin_example')
         tools_log.log_info(f"Our plugin folder: {self.plugin_dir}")

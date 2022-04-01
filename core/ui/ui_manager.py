@@ -36,10 +36,13 @@ def get_ui_class(ui_file_name, subfolder=None):
 FORM_CLASS = get_ui_class('dlg_static.ui', 'my_toolbar')
 class DlgButton1(GwDialog, FORM_CLASS):
     pass
-
-FORM_CLASS = get_ui_class('dlg_button_2.ui', 'my_toolbar')
+FORM_CLASS = get_ui_class('dlg_dinamic.ui', 'my_toolbar')
 class DlgButton2(GwDialog, FORM_CLASS):
     pass
+
+# FORM_CLASS = get_ui_class('dlg_button_2.ui', 'my_toolbar')
+# class DlgButton2(GwDialog, FORM_CLASS):
+#     pass
 
 FORM_CLASS = get_ui_class('dlg_button_3.ui', 'my_toolbar')
 class DlgButton3(GwDialog, FORM_CLASS):

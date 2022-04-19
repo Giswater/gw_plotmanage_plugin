@@ -18,8 +18,9 @@ from qgis.PyQt.QtCore import QSettings
 from collections import OrderedDict
 from ....lib import tools
 from .... import global_vars
-from ...ui.ui_manager import DlgButton2, DlgButton1
-from ....settings import giswater_folder, tools_qgis, tools_log, tools_qt, tools_gw,tools_pgdao,tools_db
+from ...ui.ui_manager import DlgSave, DlgButton1
+from ....settings import giswater_folder, tools_qgis, tools_log, tools_qt, tools_gw, tools_pgdao, tools_db
+
 dialog = importlib.import_module('.dialog', package=f'{giswater_folder}.core.toolbars')
 
 
@@ -27,7 +28,6 @@ class Graph2(dialog.GwAction):
 
     def __init__(self, icon_path, action_name, text, toolbar, action_group):
         super().__init__(icon_path, action_name, text, toolbar, action_group)
-
 
     def clicked_event(self):
         self.open_dialog()
@@ -64,21 +64,25 @@ class Graph2(dialog.GwAction):
         self.dlg_seaborn.cmb_targetColumn.currentIndexChanged.connect(self.populate_target_child_cmb)
         # self.dlg_seaborn.btn_insert.clicked.connect(self.populate_selected_lw)
         self.dlg_seaborn.btn_create.clicked.connect(self.get_graph)
-        self.dlg_seaborn.btn_save.clicked.connect(self.set_config)
+        self.dlg_seaborn.btn_save.clicked.connect(self.load_save_dialog)
         self.dlg_seaborn.btn_load.clicked.connect(self.get_config)
         self.dlg_seaborn.rb_dinamic.toggled.connect(self.populate_rb_child_cmb)
         self.dlg_seaborn.rb_static.toggled.connect(self.populate_rb_child_cmb)
 
         # Open dialog
         tools_gw.open_dialog(self.dlg_seaborn, dlg_name='seaborn')
+
     def populate_rb_child_cmb(self):
         if tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_dinamic):
-            base_column = [['2D_Histogram', '2D Histogram'], ['Bar_plot', 'Bar plot'], ['Box_plot', 'Box plot'], ['Contour_plot', 'Contour plot'],
-                           ['Historgram', 'Histogram'], ['Pie_Chart', 'Pie Chart'], ['Polar_plot', 'Polar_plot'], ['Scatter plot', 'Scatter plot'],
+            base_column = [['2D_Histogram', '2D Histogram'], ['Bar_plot', 'Bar plot'], ['Box_plot', 'Box plot'],
+                           ['Contour_plot', 'Contour plot'],
+                           ['Historgram', 'Histogram'], ['Pie_Chart', 'Pie Chart'], ['Polar_plot', 'Polar_plot'],
+                           ['Scatter plot', 'Scatter plot'],
                            ['Violin plot', 'Violin plot']]
             tools_qt.fill_combo_values(self.dlg_seaborn.cmb_plottype, rows=base_column)
         elif tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_static):
-            base_column = [['Bar plot', 'Bar plot'], ['Box plot', 'Box plot'], ['Scatter plot', 'Scatter plot'], ['Pie_Chart', 'Pie Chart'],
+            base_column = [['Bar plot', 'Bar plot'], ['Box plot', 'Box plot'], ['Scatter plot', 'Scatter plot'],
+                           ['Pie_Chart', 'Pie Chart'],
                            ['Histogram', 'Histogram'], ['contour', 'contour']]
             tools_qt.fill_combo_values(self.dlg_seaborn.cmb_plottype, rows=base_column)
 
@@ -92,7 +96,6 @@ class Graph2(dialog.GwAction):
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_xaxis, rows=rows)
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_yaxis, rows=rows)
 
-
     def populate_base_child_cmb(self):
 
         table_selected = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_nameTable)
@@ -100,7 +103,6 @@ class Graph2(dialog.GwAction):
         sql = f"SELECT DISTINCT({index_selected}) FROM {table_selected} order by {index_selected};"
         rows_id = tools_db.get_rows(sql)
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_basevalue, rows_id)
-
 
     def populate_target_child_cmb(self):
 
@@ -116,7 +118,6 @@ class Graph2(dialog.GwAction):
         # d = json.loads(s)
         # for r in d:
         #     self.dlg_seaborn.lw_defaultvalues.addItems(r)
-
 
     def populate_selected_lw(self):
         # item = self.dlg_seaborn.lw_defaultvalues.selectedItems()
@@ -171,12 +172,13 @@ class Graph2(dialog.GwAction):
                     y_result[key].append(y)
             node = []
             for key in num_keys:
-                fi.add_trace(go.Scatter(x=x_result[key], y=y_result[key]))
+                fi.add_trace(go.Scatter(x=x_result[key], y=y_result[key], name=str(key)))
             for i in range(len(fi.data)):
                 step = dict(
                     method="update",
                     args=[{"visible": [False] * len(fi.data)},
-                          {"title": "Slider switched to node: " + str(num_keys[i])}],  # layout attribute
+                          {"title": "Slider switched to node: " + str(num_keys[i])},
+                          {"name": num_keys[i]}],  # layout attribute
                 )
                 step["args"][0]["visible"][i] = True  # Toggle i'th trace to "visible"
                 node.append(step)
@@ -184,7 +186,7 @@ class Graph2(dialog.GwAction):
             sliders = [dict(
                 active=10,
                 currentvalue={"prefix": "Frequency: "},
-                pad={"b": 50},
+                pad={"t": 50},
                 steps=node
             )]
 
@@ -390,8 +392,6 @@ class Graph2(dialog.GwAction):
                 fi.add_trace(go.Violin(x=x_result[key], y=y_result[key]))
             fi.show()
 
-
-
     def get_stat_graph(self):
 
         import matplotlib.pyplot as plt
@@ -415,7 +415,6 @@ class Graph2(dialog.GwAction):
             x_result = {}
             y_result = {}
 
-
             print(query)
 
             for target, x, y in db_data:
@@ -434,7 +433,8 @@ class Graph2(dialog.GwAction):
             for key in num_keys:
                 plt.bar(x_result[key], y_result[key])
 
-            plt.legend(num_keys, ncol=2, loc='upper left');
+            plt.legend(num_keys, bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left",
+                       mode="expand", borderaxespad=0, ncol=3)
             plt.show()
         elif plot_type == "Box plot":
             num_keys = []
@@ -442,7 +442,6 @@ class Graph2(dialog.GwAction):
             sns.set()
             x_result = {}
             y_result = {}
-
 
             print(query)
 
@@ -462,7 +461,8 @@ class Graph2(dialog.GwAction):
             for key in num_keys:
                 plt.boxplot(db_data)
 
-            plt.legend(num_keys, ncol=2, loc='upper left');
+            plt.legend(num_keys, bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left",
+                       mode="expand", borderaxespad=0, ncol=3)
             plt.show()
         elif plot_type == "Scatter plot":
             num_keys = []
@@ -489,8 +489,8 @@ class Graph2(dialog.GwAction):
             for key in num_keys:
                 plt.scatter(x_result[key], y_result[key])
 
-            plt.legend(num_keys,bbox_to_anchor=(0,1.02,1,0.2), loc="lower left",
-                mode="expand", borderaxespad=0, ncol=3)
+            plt.legend(num_keys, bbox_to_anchor=(0, 1.02, 1, 0.2), loc="lower left",
+                       mode="expand", borderaxespad=0, ncol=3)
             plt.show()
         elif plot_type == "Pie_Chart":
             sns.set()
@@ -507,6 +507,12 @@ class Graph2(dialog.GwAction):
             for values in db_data:
                 plt.contourf(data=values)
             plt.show()
+
+    def load_save_dialog(self):
+        self.dlg_save = DlgSave()
+
+        tools_gw.open_dialog(self.dlg_save, dlg_name='save')
+
 
     def set_config(self):
         rb_dinamic = tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_dinamic)
@@ -528,23 +534,24 @@ class Graph2(dialog.GwAction):
         tools_gw.set_config_parser('my_button_2', 'base_column', f'{base_column}', prefix=True)
         tools_gw.set_config_parser('my_button_2', 'base_value', f'{base_value}', prefix=True)
         tools_gw.set_config_parser('my_button_2', 'target_value', f'{target_value}', prefix=True)
-        #tools_gw.set_config_parser('my_button_2', 'target_values', f'{target_values}', prefix=True, file_name="plotmanager")
+        # tools_gw.set_config_parser('my_button_2', 'target_values', f'{target_values}', prefix=True, file_name="plotmanager")
         # tools_gw.set_config_parser('my_button_2', 'target_selected_values', f'{target_selected_values}', prefix=True, file_name="plotmanager")
         tools_gw.set_config_parser('my_button_2', 'xaxis', f'{xaxis}', prefix=True)
         tools_gw.set_config_parser('my_button_2', 'yaxis', f'{yaxis}', prefix=True)
 
+
     def get_config(self):
         rb_dinamic = tools_gw.get_config_parser('my_button_2', 'rb_dinamic', "user", "session", prefix=True)
         rb_static = tools_gw.get_config_parser('my_button_2', 'rb_static', "user", "session", prefix=True)
-        plot = tools_gw.get_config_parser('my_button_2', 'plot',  "user", "session",prefix=True)
-        table = tools_gw.get_config_parser('my_button_2', 'table',  "user", "session",prefix=True)
-        base_column = tools_gw.get_config_parser('my_button_2', 'base_column',  "user", "session",prefix=True)
-        base_value = tools_gw.get_config_parser('my_button_2', 'base_value', "user", "session",prefix=True)
+        plot = tools_gw.get_config_parser('my_button_2', 'plot', "user", "session", prefix=True)
+        table = tools_gw.get_config_parser('my_button_2', 'table', "user", "session", prefix=True)
+        base_column = tools_gw.get_config_parser('my_button_2', 'base_column', "user", "session", prefix=True)
+        base_value = tools_gw.get_config_parser('my_button_2', 'base_value', "user", "session", prefix=True)
         # target_column = tools_gw.get_config_parser('my_button_2', 'target_column',  "user", "plotmanager",prefix=True)
         # target_selected_values = tools_gw.get_config_parser('my_button_2', 'target_selected_values',  "user", "plotmanager",prefix=True)
-        target_value = tools_gw.get_config_parser('my_button_2', 'target_value', "user", "session",prefix=True)
-        xaxis = tools_gw.get_config_parser('my_button_2', 'xaxis',  "user", "session", prefix=True)
-        yaxis = tools_gw.get_config_parser('my_button_2', 'yaxis',  "user", "session", prefix=True)
+        target_value = tools_gw.get_config_parser('my_button_2', 'target_value', "user", "session", prefix=True)
+        xaxis = tools_gw.get_config_parser('my_button_2', 'xaxis', "user", "session", prefix=True)
+        yaxis = tools_gw.get_config_parser('my_button_2', 'yaxis', "user", "session", prefix=True)
         print(f"dinamic {rb_dinamic}")
         print(f"{rb_static=}")
 
@@ -564,7 +571,7 @@ class Graph2(dialog.GwAction):
         tools_qt.set_selected_item(self.dlg_seaborn, self.dlg_seaborn.cmb_yaxis, yaxis)
 
 
-    def set_boolean(self,param, default=True):
+    def set_boolean(self, param, default=True):
         """
         Receives a string and returns a bool
             :param param: String to cast (String)

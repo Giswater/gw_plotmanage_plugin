@@ -44,8 +44,8 @@ class DlgButton2(GwDialog, FORM_CLASS):
 # class DlgButton2(GwDialog, FORM_CLASS):
 #     pass
 
-FORM_CLASS = get_ui_class('dlg_button_3.ui', 'my_toolbar')
-class DlgButton3(GwDialog, FORM_CLASS):
+FORM_CLASS = get_ui_class('dlg_save.ui', 'my_toolbar')
+class DlgSave(GwDialog, FORM_CLASS):
     pass
 
 FORM_CLASS = get_ui_class('dlg_button_7.ui', 'my_toolbar')

@@ -10,7 +10,9 @@ import json
 import os
 import sys
 from functools import partial
+from typing import IO
 
+from pandas._libs.algos import take_1d_object_object
 from plotly import data
 from qgis.core import QgsVectorLayer
 from qgis.utils import iface
@@ -56,6 +58,19 @@ class Graph2(dialog.GwAction):
         base_tables = [[base_table] for base_table in base_tables]
         print(base_tables)
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_nameTable, rows=base_tables)
+        custom_string = {
+            "title": {
+                "xAxis": "X",
+                "yAxis": "Y",
+                "target": "T"
+            },
+            "marker": {
+                "width": 1,
+                "height": 1,
+                "type": "continuous"
+            }
+        }
+        tools_qt.set_widget_text(self.dlg_seaborn, self.dlg_seaborn.te_custom, custom_string)
 
         # Listeners
         self.dlg_seaborn.cmb_nameTable.currentIndexChanged.connect(self.populate_table_child_cmb)
@@ -75,7 +90,8 @@ class Graph2(dialog.GwAction):
             base_column = [['2D_Histogram', '2D Histogram'], ['Bar_plot', 'Bar plot'], ['Box_plot', 'Box plot'],
                            ['Contour_plot', 'Contour plot'],
                            ['Historgram', 'Histogram'], ['Pie_Chart', 'Pie Chart'], ['Polar_plot', 'Polar_plot'],
-                           ['Scatter plot', 'Scatter plot'], ['Line plot', 'Line plot'],
+                           ['Scatter plot', 'Scatter plot'], ['Line plot with scrollbar', 'Line plot with scrollbar'],
+                           ['Line plot without scrollbar', 'Line plot without scrollbar'],
                            ['Violin plot', 'Violin plot']]
             tools_qt.fill_combo_values(self.dlg_seaborn.cmb_plottype, rows=base_column)
         elif tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_static):
@@ -96,7 +112,7 @@ class Graph2(dialog.GwAction):
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_yaxis, rows=rows)
 
     def populate_base_child_cmb(self):
-        #Populates combobox with the base values you can choose
+        # Populates combobox with the base values you can choose
         table_selected = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_nameTable)
         index_selected = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_basecolumn)
         sql = f"SELECT DISTINCT({index_selected}) FROM {table_selected} order by {index_selected};"
@@ -104,7 +120,7 @@ class Graph2(dialog.GwAction):
         tools_qt.fill_combo_values(self.dlg_seaborn.cmb_basevalue, rows_id)
 
     def get_graph(self):
-        #Calls the method dependig on which type of graph you choose HTML5 or PNG
+        # Calls the method dependig on which type of graph you choose HTML5 or PNG
         if tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_dinamic):
             self.get_din_graph()
         elif tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_static):
@@ -124,13 +140,17 @@ class Graph2(dialog.GwAction):
         target_value = tools_qt.get_text(self.dlg_seaborn, self.dlg_seaborn.le_target)
         yaxis = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_yaxis)
         xaxis = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_xaxis)
-
-        #Makes the query
-        query = f"SELECT {target_column},{xaxis},{yaxis} FROM {table} WHERE {base_column}='{base_value}' {target_value};"
+        customs = tools_qt.get_text(self.dlg_seaborn, self.dlg_seaborn.te_custom)
+        customs = customs.replace("\'", "\"")
+        o_customs = json.loads(customs)
+        print(o_customs['title']['xAxis'])
+        # Makes the query
+        query = f"SELECT {target_column} AS {o_customs['title']['target']} ,{xaxis} AS {o_customs['title']['xAxis']} ,{yaxis} AS {o_customs['title']['yAxis']}  FROM {table} WHERE {base_column}='{base_value}' {target_value};"
         # db_data is stored like [0, 1, 2] meaning [target_column, xaxis, yaxis]
         db_data = tools_db.get_rows(query)
-        #Creates the graph type with the selected data
-        if plot_type == 'Scatter plot':
+
+        # Creates the graph type with the selected data
+        if plot_type == 'Line plot without scrollbar':
             num_keys = []
             # Creates Figure
             fi = go.Figure()
@@ -155,7 +175,7 @@ class Graph2(dialog.GwAction):
             node = []
             # Adds the figures to the graph
             for key in num_keys:
-                fi.add_trace(go.Scatter(x=x_result[key], y=y_result[key], name=str(key)))
+                fi.add_trace(go.Line(x=x_result[key], y=y_result[key], name=str(key)))
 
             # Creates the legend
             for i in range(len(fi.data)):
@@ -169,12 +189,20 @@ class Graph2(dialog.GwAction):
                 node.append(step)
             # shows the graph
             fi.show()
-        elif plot_type == 'Line plot':
+        elif plot_type == 'Line plot with scrollbar':
             # Inserts the db_data and specifies which value goes there
-            fig = px.line(db_data, x=1, y=2, animation_frame=0)
-            fig["layout"].pop("updatemenus")  # optional, drop animation buttons
+            a, x, y = zip(*db_data)
+            my_dict = {o_customs['title']['target']: a, o_customs['title']['xAxis']: x, o_customs['title']['yAxis']: y}
+            print(my_dict)
+            fig = px.line(my_dict, x=o_customs['title']['xAxis'], y=o_customs['title']['yAxis'], animation_frame=o_customs['title']['target'])
             fig.show()
-
+        elif plot_type == 'Scatter plot':
+            # Inserts the db_data and specifies which value goes there
+            a, x, y = zip(*db_data)
+            my_dict = {target_column: a, xaxis: x, yaxis: y}
+            print(my_dict)
+            fig = px.scatter(my_dict, x=xaxis, y=yaxis, animation_frame=target_column)
+            fig.show()
         elif plot_type == '2D_Histogram':
             num_keys = []
             # Creates Figure
@@ -476,10 +504,11 @@ class Graph2(dialog.GwAction):
         self.dlg_save = DlgSave()
 
         tools_gw.open_dialog(self.dlg_save, dlg_name='save')
-
+        self.dlg_save.btn_save.clicked.connect(self.set_config)
 
     def set_config(self):
         # Gets all the data from the Dialog
+        config_name = tools_qt.get_text(self.dlg_save, self.dlg_save.le_search)
         rb_dinamic = tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_dinamic)
         rb_static = tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_static)
         plot = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_plottype)
@@ -503,7 +532,6 @@ class Graph2(dialog.GwAction):
         tools_gw.set_config_parser('my_button_2', 'xaxis', f'{xaxis}', prefix=True)
         tools_gw.set_config_parser('my_button_2', 'yaxis', f'{yaxis}', prefix=True)
 
-
     def get_config(self):
 
         # Gets all the data from the session.config file
@@ -513,7 +541,7 @@ class Graph2(dialog.GwAction):
         table = tools_gw.get_config_parser('my_button_2', 'table', "user", "session", prefix=True)
         base_column = tools_gw.get_config_parser('my_button_2', 'base_column', "user", "session", prefix=True)
         base_value = tools_gw.get_config_parser('my_button_2', 'base_value', "user", "session", prefix=True)
-        target_column = tools_gw.get_config_parser('my_button_2', 'target_column',  "user", "session",prefix=True)
+        target_column = tools_gw.get_config_parser('my_button_2', 'target_column', "user", "session", prefix=True)
         target_value = tools_gw.get_config_parser('my_button_2', 'target_value', "user", "session", prefix=True)
         xaxis = tools_gw.get_config_parser('my_button_2', 'xaxis', "user", "session", prefix=True)
         yaxis = tools_gw.get_config_parser('my_button_2', 'yaxis', "user", "session", prefix=True)
@@ -533,7 +561,6 @@ class Graph2(dialog.GwAction):
         tools_qt.set_selected_item(self.dlg_seaborn, self.dlg_seaborn.cmb_targetColumn, target_column)
         tools_qt.set_selected_item(self.dlg_seaborn, self.dlg_seaborn.cmb_xaxis, xaxis)
         tools_qt.set_selected_item(self.dlg_seaborn, self.dlg_seaborn.cmb_yaxis, yaxis)
-
 
     def set_boolean(self, param, default=True):
         """

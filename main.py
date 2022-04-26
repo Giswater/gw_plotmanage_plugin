@@ -14,7 +14,8 @@ from qgis.PyQt.QtWidgets import QActionGroup, QDockWidget, QToolBar
 
 from . import global_vars
 from .core.plugin_toolbar import PluginToolbar
-from .settings import gw_global_vars, giswater_folder_path, tools_log
+from .settings import gw_global_vars, giswater_folder_path, tools_log,  tools_qgis, tools_os
+
 
 
 class GWPluginExample(QObject):
@@ -73,8 +74,11 @@ class GWPluginExample(QObject):
             self.iface.messageBar().pushMessage("", message, 1, 20)
             return
 
+        giswater_plugin_name = tools_qgis.get_plugin_metadata('name', 'giswater')
+        get_major_version = tools_qgis.get_major_version()
+        global_vars.roaming_user_dir = f'{tools_os.get_datadir()}{os.sep}{giswater_plugin_name}{os.sep}{get_major_version}'
         # Need init giswater global_vars if we can inherit from GwMaptool becouse example is loaded before giswater
-        gw_global_vars.init_global(self.iface, self.iface.mapCanvas(), giswater_folder_path, self.plugin_name, None)
+        gw_global_vars.init_global(self.iface, self.iface.mapCanvas(), giswater_folder_path, self.plugin_name, global_vars.roaming_user_dir)
 
         global_vars.init_global(self.iface, self.iface.mapCanvas(), self.plugin_dir, self.plugin_name)
 
@@ -82,6 +86,11 @@ class GWPluginExample(QObject):
         self.settings.setIniCodec(sys.getfilesystemencoding())
         self.qgis_settings = QSettings()
         self.qgis_settings.setIniCodec(sys.getfilesystemencoding())
+
+        # Check if user config folder exists
+        user_folder_name = self.plugin_name.replace('gw_', '').replace('_plugin', '')
+        self._manage_user_config_folder(f"{global_vars.roaming_user_dir}{os.sep}{user_folder_name}")
+        global_vars.user_folder_name = user_folder_name
 
         # Create custom plugin toolbars
         self.create_toolbars()
@@ -184,3 +193,22 @@ class GWPluginExample(QObject):
         schema_name = self.settings.value(f"database/schema_name")
         global_vars.schema_name = schema_name
 
+    def _manage_user_config_folder(self, user_folder_dir):
+        """ Check if user config folder exists. If not create empty files init.config and session.config """
+
+        try:
+            config_folder = f"{user_folder_dir}{os.sep}config{os.sep}"
+            if not os.path.exists(config_folder):
+                tools_log.log_info(f"Creating user config folder: {config_folder}")
+                os.makedirs(config_folder)
+
+            # Check if config files exists. If not create them empty
+            filepath = f"{config_folder}{os.sep}init.config"
+            if not os.path.exists(filepath):
+                open(filepath, 'a').close()
+            filepath = f"{config_folder}{os.sep}session.config"
+            if not os.path.exists(filepath):
+                open(filepath, 'a').close()
+
+        except Exception as e:
+            tools_log.log_warning(f"manage_user_config_folder: {e}")

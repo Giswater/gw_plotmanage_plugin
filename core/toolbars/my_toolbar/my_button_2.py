@@ -194,14 +194,16 @@ class Graph2(dialog.GwAction):
             a, x, y = zip(*db_data)
             my_dict = {o_customs['title']['target']: a, o_customs['title']['xAxis']: x, o_customs['title']['yAxis']: y}
             print(my_dict)
-            fig = px.line(my_dict, x=o_customs['title']['xAxis'], y=o_customs['title']['yAxis'], animation_frame=o_customs['title']['target'])
+            fig = px.line(my_dict, x=o_customs['title']['xAxis'], y=o_customs['title']['yAxis'],
+                          animation_frame=o_customs['title']['target'])
             fig.show()
         elif plot_type == 'Scatter plot':
             # Inserts the db_data and specifies which value goes there
             a, x, y = zip(*db_data)
-            my_dict = {target_column: a, xaxis: x, yaxis: y}
+            my_dict = {o_customs['title']['target']: a, o_customs['title']['xAxis']: x, o_customs['title']['yAxis']: y}
             print(my_dict)
-            fig = px.scatter(my_dict, x=xaxis, y=yaxis, animation_frame=target_column)
+            fig = px.scatter(my_dict, x=o_customs['title']['xAxis'], y=o_customs['title']['yAxis'],
+                             animation_frame=o_customs['title']['target'])
             fig.show()
         elif plot_type == '2D_Histogram':
             num_keys = []
@@ -504,9 +506,26 @@ class Graph2(dialog.GwAction):
         self.dlg_save = DlgSave()
 
         tools_gw.open_dialog(self.dlg_save, dlg_name='save')
+        self.populate_sections()
         self.dlg_save.btn_save.clicked.connect(self.set_config)
+        self.dlg_save.btn_load.clicked.connect(self.get_config)
+        self.dlg_save.lw_results.itemSelectionChanged.connect(self.get_selected_section)
+
+    def populate_sections(self):
+        import configparser
+        config = configparser.ConfigParser()
+        config.sections()
+        config.read(r'C:\Users\Guillem\AppData\Roaming\Giswater\3.5\plotmanage\config\session.config')
+        for sec in config.sections():
+            self.dlg_save.lw_results.addItem(sec)
+    def get_selected_section(self):
+        tools_qt.set_widget_text(self.dlg_save, self.dlg_save.le_search, self.dlg_save.lw_results.currentItem().text())
+
 
     def set_config(self):
+        """
+                    Gets all the values in the fields and sets the data to the session.config file
+                """
         # Gets all the data from the Dialog
         config_name = tools_qt.get_text(self.dlg_save, self.dlg_save.le_search)
         rb_dinamic = tools_qt.is_checked(self.dlg_seaborn, self.dlg_seaborn.rb_dinamic)
@@ -521,30 +540,34 @@ class Graph2(dialog.GwAction):
         yaxis = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_yaxis)
 
         # Saves the data from the dialog to the session.config file
-        tools_gw.set_config_parser('my_button_2', 'rb_dinamic', f'{rb_dinamic}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'rb_static', f'{rb_static}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'plot', f'{plot}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'table', f'{table}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'base_column', f'{base_column}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'base_value', f'{base_value}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'target_column', f'{target_column}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'target_value', f'{target_value}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'xaxis', f'{xaxis}', prefix=True)
-        tools_gw.set_config_parser('my_button_2', 'yaxis', f'{yaxis}', prefix=True)
+        tools_gw.set_config_parser(config_name, 'rb_dinamic', f'{rb_dinamic}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'rb_static', f'{rb_static}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'plot', f'{plot}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'table', f'{table}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'base_column', f'{base_column}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'base_value', f'{base_value}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'target_column', f'{target_column}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'target_value', f'{target_value}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'xaxis', f'{xaxis}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'yaxis', f'{yaxis}', prefix=True, plugin=global_vars.user_folder_name)
+        self.populate_sections()
 
     def get_config(self):
-
+        """
+            Gets all the data from the session.config file and sets the values in the fields
+        """
+        config_name = tools_qt.get_text(self.dlg_save, self.dlg_save.le_search)
         # Gets all the data from the session.config file
-        rb_dinamic = tools_gw.get_config_parser('my_button_2', 'rb_dinamic', "user", "session", prefix=True)
-        rb_static = tools_gw.get_config_parser('my_button_2', 'rb_static', "user", "session", prefix=True)
-        plot = tools_gw.get_config_parser('my_button_2', 'plot', "user", "session", prefix=True)
-        table = tools_gw.get_config_parser('my_button_2', 'table', "user", "session", prefix=True)
-        base_column = tools_gw.get_config_parser('my_button_2', 'base_column', "user", "session", prefix=True)
-        base_value = tools_gw.get_config_parser('my_button_2', 'base_value', "user", "session", prefix=True)
-        target_column = tools_gw.get_config_parser('my_button_2', 'target_column', "user", "session", prefix=True)
-        target_value = tools_gw.get_config_parser('my_button_2', 'target_value', "user", "session", prefix=True)
-        xaxis = tools_gw.get_config_parser('my_button_2', 'xaxis', "user", "session", prefix=True)
-        yaxis = tools_gw.get_config_parser('my_button_2', 'yaxis', "user", "session", prefix=True)
+        rb_dinamic = tools_gw.get_config_parser(config_name, 'rb_dinamic', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        rb_static = tools_gw.get_config_parser(config_name, 'rb_static', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        plot = tools_gw.get_config_parser(config_name, 'plot', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        table = tools_gw.get_config_parser(config_name, 'table', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        base_column = tools_gw.get_config_parser(config_name, 'base_column', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        base_value = tools_gw.get_config_parser(config_name, 'base_value', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        target_column = tools_gw.get_config_parser(config_name, 'target_column', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        target_value = tools_gw.get_config_parser(config_name, 'target_value', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        xaxis = tools_gw.get_config_parser(config_name, 'xaxis', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
+        yaxis = tools_gw.get_config_parser(config_name, 'yaxis', "user", "session", prefix=True, plugin=global_vars.user_folder_name)
         print(f"dinamic {rb_dinamic}")
         print(f"{rb_static=}")
 

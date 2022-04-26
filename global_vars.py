@@ -13,6 +13,8 @@ from qgis.PyQt.QtCore import QSettings
 iface = None
 canvas = None
 plugin_dir = None
+roaming_user_dir = None
+user_folder_name = None
 plugin_name = None
 settings = None
 schema_name = None

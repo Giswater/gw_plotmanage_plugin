@@ -53,13 +53,6 @@
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="btn_duplicate">
-      <property name="text">
-       <string>Duplicate</string>
-      </property>
-     </widget>
-    </item>
-    <item>
      <widget class="QPushButton" name="btn_delete">
       <property name="text">
        <string>Delete</string>

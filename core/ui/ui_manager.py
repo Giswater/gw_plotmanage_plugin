@@ -32,21 +32,13 @@ def get_ui_class(ui_file_name, subfolder=None):
     return uic.loadUiType(ui_file_path)[0]
 
 
-# Dialogs of toolbar: my_toolbar
-FORM_CLASS = get_ui_class('dlg_static.ui', 'my_toolbar')
+# Dialogs of toolbar: graph_toolbar
+FORM_CLASS = get_ui_class('dlg_static.ui', 'graph_toolbar')
 class DlgButton1(GwDialog, FORM_CLASS):
     pass
 
-
-# FORM_CLASS = get_ui_class('dlg_button_2.ui', 'my_toolbar')
-# class DlgButton2(GwDialog, FORM_CLASS):
-#     pass
-
-FORM_CLASS = get_ui_class('dlg_save.ui', 'my_toolbar')
+FORM_CLASS = get_ui_class('dlg_save.ui', 'graph_toolbar')
 class DlgSave(GwDialog, FORM_CLASS):
     pass
 
-FORM_CLASS = get_ui_class('dlg_button_7.ui', 'my_toolbar')
-class DlgButton7(GwDialog, FORM_CLASS):
-    pass
 

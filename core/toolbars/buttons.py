@@ -6,10 +6,8 @@ or (at your option) any later version.
 """
 # -*- coding: utf-8 -*-
 
-# my_toolbar
-from .my_toolbar.my_button_1 import Graph
-from .my_toolbar.my_button_2 import Graph2
-from .my_toolbar.my_button_3 import Bokeh
-from .my_toolbar.my_button_4 import Plotnine
+# graph_toolbar
+from .graph_toolbar.graph_plot import Graphs
+
 
 

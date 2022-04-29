@@ -25,7 +25,7 @@ HTML5: <br>
 ![img.png](imgs/plottype.png)
 ### TABLE
 Populates the available tables to get the data<br>
-![img.png](imgs/table.PNG)
+![img.png](imgs/table.png)
 ### BASE COLUMN
 Select the base column<br>
 ![img.png](imgs/base_column.png)

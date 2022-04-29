@@ -22,14 +22,14 @@
      <item row="9" column="2">
       <widget class="QLabel" name="label_9">
        <property name="text">
-        <string>Yaxis</string>
+        <string>Yaxis:</string>
        </property>
       </widget>
      </item>
      <item row="7" column="0">
       <widget class="QLabel" name="label_6">
        <property name="text">
-        <string>Target column</string>
+        <string>Target column:</string>
        </property>
       </widget>
      </item>
@@ -43,7 +43,7 @@
      <item row="4" column="0">
       <widget class="QLabel" name="label">
        <property name="text">
-        <string>table:</string>
+        <string>Table:</string>
        </property>
       </widget>
      </item>
@@ -53,7 +53,7 @@
      <item row="9" column="0">
       <widget class="QLabel" name="label_8">
        <property name="text">
-        <string>Xaxis</string>
+        <string>Xaxis:</string>
        </property>
       </widget>
      </item>
@@ -70,7 +70,7 @@
      <item row="5" column="0">
       <widget class="QLabel" name="label_2">
        <property name="text">
-        <string>base_column</string>
+        <string>Base Column:</string>
        </property>
       </widget>
      </item>
@@ -121,7 +121,7 @@
      <item row="6" column="0">
       <widget class="QLabel" name="label_5">
        <property name="text">
-        <string>base_value</string>
+        <string>Base Value:</string>
        </property>
       </widget>
      </item>
@@ -152,7 +152,7 @@
      <item row="10" column="0">
       <widget class="QLabel" name="label_10">
        <property name="text">
-        <string>Customize</string>
+        <string>Customize:</string>
        </property>
       </widget>
      </item>

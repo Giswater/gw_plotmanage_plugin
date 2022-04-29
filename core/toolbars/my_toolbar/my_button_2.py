@@ -546,6 +546,9 @@ class Graph2(dialog.GwAction):
             self.dlg_save.lw_results.addItem(sec)
 
     def get_selected_section(self):
+        """
+            Gets the selected section and sets the text in the line edit
+        """
         tools_qt.set_widget_text(self.dlg_save, self.dlg_save.le_search, self.dlg_save.lw_results.currentItem().text())
 
     def delete_section(self):
@@ -612,7 +615,7 @@ class Graph2(dialog.GwAction):
 
     def set_config(self):
         """
-                    Gets all the values in the fields and sets the data to the session.config file
+            Gets all the values in the fields and sets the data to the session.config file
         """
         # Gets all the data from the Dialog
         config_name = tools_qt.get_text(self.dlg_save, self.dlg_save.le_search)
@@ -626,6 +629,7 @@ class Graph2(dialog.GwAction):
         target_value = tools_qt.get_text(self.dlg_seaborn, self.dlg_seaborn.le_target)
         xaxis = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_xaxis)
         yaxis = tools_qt.get_combo_value(self.dlg_seaborn, self.dlg_seaborn.cmb_yaxis)
+        customize = tools_qt.get_text(self.dlg_save, self.dlg_seaborn.te_custom)
 
         # Saves the data from the dialog to the session.config file
         tools_gw.set_config_parser(config_name, 'rb_dinamic', f'{rb_dinamic}', prefix=True,
@@ -644,6 +648,7 @@ class Graph2(dialog.GwAction):
                                    plugin=global_vars.user_folder_name)
         tools_gw.set_config_parser(config_name, 'xaxis', f'{xaxis}', prefix=True, plugin=global_vars.user_folder_name)
         tools_gw.set_config_parser(config_name, 'yaxis', f'{yaxis}', prefix=True, plugin=global_vars.user_folder_name)
+        tools_gw.set_config_parser(config_name, 'customize', f'{customize}', prefix=True, plugin=global_vars.user_folder_name)
         self.populate_sections()
 
     def get_config(self):
@@ -672,6 +677,8 @@ class Graph2(dialog.GwAction):
                                            plugin=global_vars.user_folder_name)
         yaxis = tools_gw.get_config_parser(config_name, 'yaxis', "user", "session", prefix=True,
                                            plugin=global_vars.user_folder_name)
+        customize = tools_gw.get_config_parser(config_name, 'customize', "user", "session", prefix=True,
+                                           plugin=global_vars.user_folder_name)
         print(f"dinamic {rb_dinamic}")
         print(f"{rb_static=}")
 
@@ -688,6 +695,7 @@ class Graph2(dialog.GwAction):
         tools_qt.set_selected_item(self.dlg_seaborn, self.dlg_seaborn.cmb_targetColumn, target_column)
         tools_qt.set_selected_item(self.dlg_seaborn, self.dlg_seaborn.cmb_xaxis, xaxis)
         tools_qt.set_selected_item(self.dlg_seaborn, self.dlg_seaborn.cmb_yaxis, yaxis)
+        tools_qt.set_widget_text(self.dlg_seaborn, self.dlg_seaborn.te_custom, customize)
 
     def set_boolean(self, param, default=True):
         """
